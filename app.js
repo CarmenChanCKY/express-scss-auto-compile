@@ -22,42 +22,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-/*
-console.log(scssSetUp.checkCSSFolderExist(path.join(__dirname, 'public/stylesheets/scss')));
-console.log(path.join(__dirname, 'public/stylesheets/scss'));
-*/
 
-let cssFolderPath = path.join(__dirname, "public/stylesheets/css");
-let scssFolderPath = path.join(__dirname, "public/stylesheets/scss");
-
-if (scssSetUp.checkFolderExist(cssFolderPath)) {
-} else {
-  let scssFileArr = scssSetUp.getChildFilePath(`${scssFolderPath}/**/!(_)*.scss`);
-
-  if (scssFileArr.length >= 1) {
-
-    let scssFolderArr = scssSetUp.getChildFolderPath(
-      `${scssFolderPath}/**/!(*.scss)`
-    );
-
-    if (scssFolderArr.length >= 1) {
-      scssFolderArr.splice(0, 0, cssFolderPath);
-      let directoryNameFilterCondition = [["/scss/", "/css/"]];
-      let fileNameFilterCondition = [["/scss/", "/css/"], [".scss", ".css"]];
-
-      scssSetUp.createDirectoryAsync(scssFolderArr, directoryNameFilterCondition).then(function () {
-        scssSetUp.createFileAsync(scssFileArr, fileNameFilterCondition, false).catch(function (error) {
-          console.log(error);
-        });
-      }).catch(function (err) {
-        console.log(err);
-      });
-
-    }
-  } else {
-    console.log("No styles found!");
-  }
-}
+scssSetUp.scssInitialize().catch(function(e){
+  console.log("error outer");
+  console.log(e);
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
