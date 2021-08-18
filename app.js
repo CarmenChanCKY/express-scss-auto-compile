@@ -6,7 +6,10 @@ var logger = require("morgan");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
-var scssSetUp = require("./config/scss/scssSetUp.js");
+var scssInitialize = require("./config/scss/scssInitialize.js");
+
+const fileHelper = require("./config/fileHelper.js");
+const jsonSetUp = require("./config/json/jsonSetUp.js");
 
 var app = express();
 
@@ -23,10 +26,18 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
-scssSetUp.scssInitialize().catch(function(e){
-  console.log("error outer");
+/*
+scssInitialize.scssInitialize().then(function(result){
+  scssInitialize.setSCSSFileListener();
+}).catch(function(e){
   console.log(e);
 });
+*/
+let scssDirectoryPath = path.join(__dirname, "public/stylesheets/scss");
+let scssPathArr = fileHelper.getChildFilePath(`${scssDirectoryPath}/**/*.scss`);
+
+  jsonSetUp.reinitializeJSONFileList(scssPathArr);
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

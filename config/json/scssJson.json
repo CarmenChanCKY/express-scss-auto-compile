@@ -1,0 +1,25 @@
+{
+    "updateAllSCSSWhenSave": false,
+    "scssFileList": [
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/_variable.scss",
+            "updateAll": true,
+            "linkSCSS": []
+        },
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/stylesheet.scss",
+            "updateAll": false,
+            "linkSCSS": ["C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/tes3.scss"]
+        },
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/tes3.scss",
+            "updateAll": false,
+            "linkSCSS": []
+        },
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/test7.scss",
+            "updateAll": false,
+            "linkSCSS": ["C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/tes3.scss"]
+        }
+    ]
+}
