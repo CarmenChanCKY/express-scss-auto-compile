@@ -13,6 +13,11 @@ function checkExistence(path) {
   return fs.existsSync(path);
 }
 
+function checkFileEmpty(path) {
+  let result = fs.readFileSync(path);
+  return result.length === 0;
+}
+
 function getChildDirectoryPath(parentDirectory) {
   return glob.sync(parentDirectory);
 }
@@ -21,15 +26,15 @@ function getChildFilePath(parentDirectory) {
   return glob.sync(parentDirectory);
 }
 
-async function createDirectoryAsync(directoryArr, filterCondition = null) {
-  let replace = filterCondition !== null ? true : false;
+async function createDirectoryAsync(directoryArr, replaceCondition = null) {
+  let replace = replaceCondition !== null ? true : false;
   let promiseArr = [];
 
   for (let i = 0; i < directoryArr.length; i++) {
     let directoryPath = directoryArr[i];
 
     if (replace) {
-      directoryPath = replacePath(directoryPath, filterCondition);
+      directoryPath = replacePath(directoryPath, replaceCondition);
     }
 
     promiseArr.push(await fsAsync.mkdir(directoryPath));
@@ -38,19 +43,19 @@ async function createDirectoryAsync(directoryArr, filterCondition = null) {
   return Promise.all(promiseArr);
 }
 
-async function createFileAsync(fileArr, contentArr, filterCondition = null) {
+async function createFileAsync(fileArr, contentArr, replaceCondition = null) {
   if (fileArr.length !== contentArr.length) {
     return Promise.reject("The size of file array and content array is different.");
   }
 
-  let replace = filterCondition !== null ? true : false;
+  let replace = replaceCondition !== null ? true : false;
   let promiseArr = [];
 
   for (let i = 0; i < fileArr.length; i++) {
     let filePath = fileArr[i];
 
     if (replace) {
-      filePath = replacePath(filePath, filterCondition);
+      filePath = replacePath(filePath, replaceCondition);
     }
 
     promiseArr.push(await fsAsync.writeFile(filePath, contentArr[i]));
@@ -60,17 +65,28 @@ async function createFileAsync(fileArr, contentArr, filterCondition = null) {
 }
 
 function removeDirectoryAsync(directoryPath) {
-  console.log(`removeDirectoryAsync: ${directoryPath}`);
-  return fsAsync.rm(directoryPath, { recursive: true, force: true });
+  if (checkExistence(directoryPath)) {
+    console.log(`removeDirectoryAsync: ${directoryPath}`);
+    return fsAsync.rm(directoryPath, { recursive: true, force: true });
+  }
 }
 
 function removeFileAsync(filePath) {
-  return fsAsync.unlink(filePath);
+  if (checkExistence(filePath)) {
+    console.log(`removeFileAsync: ${filePath}`);
+    return fsAsync.unlink(filePath);
+  }
 }
+
+
 
 function formatPath(pathToFormat) {
   return path.join(__dirname, `../${pathToFormat}`).replace(/\\/g, "/");
 }
+
+
+
+
 
 function replacePath(path, replaceConditionArr) {
   for (let j = 0; j < replaceConditionArr.length; j++) {
@@ -92,5 +108,6 @@ module.exports = {
   removeDirectoryAsync,
   removeFileAsync,
   formatPath,
-  replacePath
+  replacePath,
+  checkFileEmpty
 };

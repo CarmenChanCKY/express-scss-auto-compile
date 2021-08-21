@@ -24,11 +24,8 @@ function createNewFileObj(filePath) {
 }
 
 function reinitializeJSONFileList(newSCSSFileList) {
-
     let originalJSONList = readJSONFile();
-    //let unexistingLinkArr = [];
 
-    // get the unexisting link
     // copy the linkSCSS array in originalJSONList to newSCSSFileList 
     originalJSONList.scssFileList.forEach(function (originalObj, originalIndex) {
         let existPos = checkFilePathExistInJSON(newSCSSFileList, originalObj.filePath);
@@ -38,7 +35,7 @@ function reinitializeJSONFileList(newSCSSFileList) {
     });
 
     /*
-    // remove the invalid link in linkSCSS array
+    
     newSCSSFileList.forEach(function (newObj) {
         unexistingLinkArr.forEach(function (unexistingLink) {
             let removePos = newObj.linkSCSS.indexOf(unexistingLink);
@@ -51,6 +48,7 @@ function reinitializeJSONFileList(newSCSSFileList) {
     newSCSSFileList = removeInvalidLink(newSCSSFileList);
 */
 
+    // remove the invalid link in linkSCSS array
     newSCSSFileList = removeUnexistingLink(newSCSSFileList);
     return newSCSSFileList;
 
@@ -61,12 +59,10 @@ function removeUnexistingLink(JSONList = null) {
         JSONList = readJSONFile().scssFileList;
     }
 
-    let unexistingLinkArr = JSONList.map(function (searchObj) {
-        return searchObj.filePath;
-    });
+    let unexistingLinkArr = getAllPath(JSONList);
 
     JSONList.forEach(function (objValue, objIndex) {
-        console.log(objValue.linkSCSS);
+
 
         /*
         objValue.linkSCSS.forEach(function (linkValue, linkIndex) {
@@ -84,7 +80,6 @@ function removeUnexistingLink(JSONList = null) {
         */
 
         JSONList[objIndex].linkSCSS = objValue.linkSCSS.filter(function (linkValue) {
-            console.log(linkValue);
             return unexistingLinkArr.includes(linkValue)
         });
     });
@@ -165,6 +160,29 @@ function removeFileFromJSON(newFilePath) {
         }
     }
 }
+
+function getLinkSCSS(path) {
+    let obj = readJSONFile();
+    let pathArr = getAllPath(obj.scssFileList);
+    if (obj.updateAllSCSSWhenSave) {
+        return pathArr;
+    }
+    let index = checkFilePathExistInJSON(obj.scssFileList, path);
+    if (index !== -1) {
+        if (obj.scssFileList[index].updateAll) {
+            return pathArr;
+        } else {
+            return obj.scssFileList[index].linkSCSS;
+        }
+    }
+    return [];
+}
+
+function getAllPath(obj) {
+    return obj.map(function (searchObj) {
+        return searchObj.filePath;
+    });
+}
 /*
 function removeDuplicateLinkCSS(scssFileList, pathArr) {
     let result = [...scssFileList];
@@ -188,4 +206,5 @@ module.exports = {
     getJsonFilePath,
     addNewFileToJSON,
     removeFileFromJSON,
+    getLinkSCSS
 };

@@ -8,8 +8,8 @@ let cssDirectoryPath = path.join(__dirname, "../../public/stylesheets/css");
 let scssDirectoryPath = path.join(__dirname, "../../public/stylesheets/scss");
 let scssJsonFilePath = jsonSetUp.getJsonFilePath();
 
-let directoryNameFilterCondition = [["/scss/", "/css/"]];
-let fileNameFilterCondition = [
+let directoryNameReplaceCondition = [["/scss/", "/css/"]];
+let fileNameReplaceCondition = [
   ["/scss/", "/css/"],
   [".scss", ".css"],
 ];
@@ -26,10 +26,7 @@ function scssForProduction() {
 
 async function scssInitialize() {
   try {
-
-    if (fileHelper.checkExistence(cssDirectoryPath)) {
-      await fileHelper.removeDirectoryAsync(cssDirectoryPath);
-    }
+    await fileHelper.removeDirectoryAsync(cssDirectoryPath);
 
     let scssFileArr = fileHelper.getChildFilePath(`${scssDirectoryPath}/**/!(_)*.scss`);
 
@@ -45,8 +42,8 @@ async function scssInitialize() {
         return translateToCSS(path, false);
       })
 
-      await fileHelper.createDirectoryAsync(scssDirectoryArr, directoryNameFilterCondition);
-      await fileHelper.createFileAsync(scssFileArr, contentArr, fileNameFilterCondition);
+      await fileHelper.createDirectoryAsync(scssDirectoryArr, directoryNameReplaceCondition);
+      await fileHelper.createFileAsync(scssFileArr, contentArr, fileNameReplaceCondition);
 
       let scssPathArr = fileHelper.getChildFilePath(`${scssDirectoryPath}/**/*.scss`);
 
@@ -76,27 +73,64 @@ function setSCSSFileListener() {
   let watcher = chokidar.watch("public/stylesheets/scss/**", { ignoreInitial: true });
   watcher
     .on('add', function (path) {
+      let formatPath = fileHelper.formatPath(path);
+      jsonSetUp.addNewFileToJSON(formatPath, true);
+
+      if (!fileHelper.checkFileEmpty(formatPath)) {
+        fileHelper.createFileAsync([formatPath], [translateToCSS(formatPath)], fileNameReplaceCondition)
+          .catch(function (e) {
+            console.log(e);
+          });
+      }
+
       console.log(`setSCSSFileListener: File ${path} is added.`);
-      jsonSetUp.addNewFileToJSON(fileHelper.formatPath(path), true);
-      // TODO: compile
+      console.log("-------------------------------------------------------");
     })
     .on('unlink', function (path) {
-      console.log(`setSCSSFileListener: File ${path} is removed.`);
-      
       let formatPath = fileHelper.formatPath(path);
       jsonSetUp.removeFileFromJSON(formatPath);
-      //TODO: check file exist
-      fileHelper.removeFileAsync(fileHelper.replacePath(formatPath, fileNameFilterCondition));
-
+      fileHelper.removeFileAsync(fileHelper.replacePath(formatPath, fileNameReplaceCondition));
+      console.log(`setSCSSFileListener: File ${path} is removed.`);
+      console.log("-------------------------------------------------------");
     })
     .on('addDir', function (path) {
       console.log(`setSCSSFileListener: Directory ${path} is added.`);
+      console.log("-------------------------------------------------------");
     })
     .on('unlinkDir', function (path) {
       console.log(`setSCSSFileListener: Directory ${path} is removed.`);
+      console.log("-------------------------------------------------------");
     })
     .on('change', function (path) {
+      let formatPath = fileHelper.formatPath(path);
+
+      let updatePath = [];
+      let cssContent = [];
+
+      let linkSCSS = jsonSetUp.getLinkSCSS(formatPath);
+      if (linkSCSS.length !== 0) {
+        linkSCSS.forEach(function (link) {
+          updatePath.push(link);
+          cssContent.push(translateToCSS(link));
+        });
+      } else {
+        updatePath.push(formatPath);
+        cssContent.push(formatPath);
+      }
+
+      fileHelper.createFileAsync(updatePath, cssContent, fileNameReplaceCondition)
+        .then(function () {
+          updatePath.forEach(function (link) {
+            console.log(`setSCSSFileListener: CSS File of ${link} has been updated.`);
+
+          });
+          console.log("-------------------------------------------------------");
+        })
+        .catch(function (e) {
+          console.log(e);
+        });
       console.log(`setSCSSFileListener: File ${path} has changed.`);
+      console.log("-------------------------------------------------------");
     })
     .on('error', function (e) {
       console.log(e);
