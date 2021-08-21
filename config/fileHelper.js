@@ -1,14 +1,16 @@
 const fs = require("fs");
 const fsAsync = require("fs/promises");
 const glob = require("glob");
+const path = require("path");
 
 /**
  *
- * @param {String} directoryPath
- * @returns {Boolean} true when directory exist, false when directory does not exist
+ * @param {String} path
+ * @returns {Boolean} true when directory or file exist, false when it does not exist
  */
-function checkExistence(directoryPath) {
-  return fs.existsSync(directoryPath);
+function checkExistence(path) {
+  console.log(`checkExistence: ${path}`);
+  return fs.existsSync(path);
 }
 
 function getChildDirectoryPath(parentDirectory) {
@@ -27,12 +29,7 @@ async function createDirectoryAsync(directoryArr, filterCondition = null) {
     let directoryPath = directoryArr[i];
 
     if (replace) {
-      for (let j = 0; j < filterCondition.length; j++) {
-        directoryPath = directoryPath.replace(
-          filterCondition[j][0],
-          filterCondition[j][1]
-        );
-      }
+      directoryPath = replacePath(directoryPath, filterCondition);
     }
 
     promiseArr.push(await fsAsync.mkdir(directoryPath));
@@ -53,12 +50,7 @@ async function createFileAsync(fileArr, contentArr, filterCondition = null) {
     let filePath = fileArr[i];
 
     if (replace) {
-      for (let j = 0; j < filterCondition.length; j++) {
-        filePath = filePath.replace(
-          filterCondition[j][0],
-          filterCondition[j][1]
-        );
-      }
+      filePath = replacePath(filePath, filterCondition);
     }
 
     promiseArr.push(await fsAsync.writeFile(filePath, contentArr[i]));
@@ -68,11 +60,27 @@ async function createFileAsync(fileArr, contentArr, filterCondition = null) {
 }
 
 function removeDirectoryAsync(directoryPath) {
+  console.log(`removeDirectoryAsync: ${directoryPath}`);
   return fsAsync.rm(directoryPath, { recursive: true, force: true });
 }
 
 function removeFileAsync(filePath) {
   return fsAsync.unlink(filePath);
+}
+
+function formatPath(pathToFormat) {
+  return path.join(__dirname, `../${pathToFormat}`).replace(/\\/g, "/");
+}
+
+function replacePath(path, replaceConditionArr) {
+  for (let j = 0; j < replaceConditionArr.length; j++) {
+    path = path.replace(
+      replaceConditionArr[j][0],
+      replaceConditionArr[j][1]
+    );
+  }
+
+  return path;
 }
 
 module.exports = {
@@ -82,5 +90,7 @@ module.exports = {
   createDirectoryAsync,
   createFileAsync,
   removeDirectoryAsync,
-  removeFileAsync
+  removeFileAsync,
+  formatPath,
+  replacePath
 };

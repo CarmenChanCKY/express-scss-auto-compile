@@ -23,25 +23,97 @@ function createNewFileObj(filePath) {
     return obj;
 }
 
-function reinitializeJSONFileList(newFileNameArr){
-    
-    let originalFileList=readJSONFile();
+function reinitializeJSONFileList(newSCSSFileList) {
 
-    // remove deleted scss's record in originalFileList
+    let originalJSONList = readJSONFile();
+    //let unexistingLinkArr = [];
 
-    // TODO:
-    originalFileList.scssFileList.forEach(function(originalObj, originalIndex){
-        if(checkFilePathExistInJSON(newFileArr, originalObj.filePath)===-1){
-            console.log("not contain");
+    // get the unexisting link
+    // copy the linkSCSS array in originalJSONList to newSCSSFileList 
+    originalJSONList.scssFileList.forEach(function (originalObj, originalIndex) {
+        let existPos = checkFilePathExistInJSON(newSCSSFileList, originalObj.filePath);
+        if (existPos !== -1) {
+            newSCSSFileList[existPos].linkSCSS = originalJSONList.scssFileList[originalIndex].linkSCSS;
         }
-
     });
 
+    /*
+    // remove the invalid link in linkSCSS array
+    newSCSSFileList.forEach(function (newObj) {
+        unexistingLinkArr.forEach(function (unexistingLink) {
+            let removePos = newObj.linkSCSS.indexOf(unexistingLink);
+            if (removePos !== -1) {
+                newObj.linkSCSS.splice(removePos, 1);
+            }
+        });
+    });
 
+    newSCSSFileList = removeInvalidLink(newSCSSFileList);
+*/
 
+    newSCSSFileList = removeUnexistingLink(newSCSSFileList);
+    return newSCSSFileList;
 
+}
 
+function removeUnexistingLink(JSONList = null) {
+    if (JSONList === null) {
+        JSONList = readJSONFile().scssFileList;
+    }
 
+    let unexistingLinkArr = JSONList.map(function (searchObj) {
+        return searchObj.filePath;
+    });
+
+    JSONList.forEach(function (objValue, objIndex) {
+        console.log(objValue.linkSCSS);
+
+        /*
+        objValue.linkSCSS.forEach(function (linkValue, linkIndex) {
+            console.log(linkIndex);
+            if (!unexistingLinkArr.includes(linkValue)) {
+                // objValue.linkSCSS.splice(linkIndex, 1);
+                if (JSONList[objIndex].linkSCSS.length === 1) {
+                    JSONList[objIndex].linkSCSS = [];
+                } else {
+                    JSONList[objIndex].linkSCSS.splice(linkIndex, 1);
+                }
+
+            }
+        });
+        */
+
+        JSONList[objIndex].linkSCSS = objValue.linkSCSS.filter(function (linkValue) {
+            console.log(linkValue);
+            return unexistingLinkArr.includes(linkValue)
+        });
+    });
+
+    return JSONList;
+
+}
+
+/*
+function removeInvalidLink(obj) {
+    let searchValue = obj.map(function (searchObj) {
+        return searchObj.filePath;
+    });
+
+    obj.forEach(function (objValue) {
+        objValue.linkSCSS.forEach(function (linkValue, linkIndex) {
+            if (!searchValue.includes(linkValue)) {
+                objValue.linkSCSS.splice(linkIndex, 1);
+            }
+        });
+    });
+
+    return obj;
+}
+*/
+function checkFilePathExistInJSON(fileObj, filePath) {
+    return fileObj.findIndex(function (obj) {
+        return obj.filePath === filePath;
+    });
 }
 
 
@@ -58,65 +130,46 @@ function readJSONFile() {
 }
 
 function writeJSONFile(obj) {
-    fs.writeFile(scssJsonFilePath, JSON.stringify(obj), function (err) {
-        if (err) {
-            console.log(error);
-        } else {
-            console.log("scssJSON.json update successful.");
-        }
-    });
+    fs.writeFileSync(scssJsonFilePath, JSON.stringify(obj));
 }
 
-function updateJSONFile(newFilePath, showErrorMsg = false) {
-    // TODO: uncheck
-    let filePath = formatPath(newFilePath);
+function addNewFileToJSON(newFilePath, showErrorMsg = false) {
     let obj = readJSONFile();
-    let index = checkFilePathExistInJSON(obj.scssFileList, filePath);
+    let index = checkFilePathExistInJSON(obj.scssFileList, newFilePath);
 
     if (index !== -1) {
-        if(showErrorMsg){
-            console.log("File path exists in scssJSON.json");
+        if (showErrorMsg) {
+            console.log("addNewFileToJSON: File path exists in scssJSON.json");
         }
         return;
     }
 
-    let newFileObj = createNewFileObj(filePath);
+    let newFileObj = createNewFileObj(newFilePath);
     obj.scssFileList.push(newFileObj);
     writeJSONFile(obj);
 }
 
-function checkFilePathExistInJSON(fileObj, filePath) {
-    console.log("file: "+filePath);
-    console.log("fileobj: "+fileObj);
-    return fileObj.findIndex(function (obj) {
-        console.log("obj.filePath: "+obj.filePath)
-        return obj.filePath === filePath;
-    });
-}
+
 
 function removeFileFromJSON(newFilePath) {
-    // TODO: uncheck
-    let filePath = formatPath(newFilePath);
     let obj = readJSONFile();
-    let index = checkFilePathExistInJSON(obj.scssFileList, filePath);
+    let index = checkFilePathExistInJSON(obj.scssFileList, newFilePath);
     if (index !== -1) {
-        obj.scssFileList.splice(index, 1);
-        obj.scssFileList = removeDuplicateLinkCSS(obj.scssFileList, [filePath]);
-        writeJSONFile(obj);
+        try {
+            obj.scssFileList.splice(index, 1);
+            obj.scssFileList = removeUnexistingLink(obj.scssFileList);
+            writeJSONFile(obj);
+            console.log("removeFileFromJSON: File path has been removed from scssJSON.json");
+        } catch (e) {
+            console.log(e);
+        }
     }
-    console.log("File path has been removed from scssJSON.json");
 }
-
+/*
 function removeDuplicateLinkCSS(scssFileList, pathArr) {
     let result = [...scssFileList];
-
-    /*      TODO: 
-        fileObj.linkSCSS.forEach(function (scssValue) {
-        TypeError: Cannot read property 'forEach' of undefined 
-        */
     scssFileList.forEach(function (obj) {
-        let fileObj = obj.linkSCSS;
-        fileObj.linkSCSS.forEach(function (scssValue) {
+        obj.linkSCSS.forEach(function (scssValue) {
             if (pathArr.includes(scssValue)) {
                 result.splice(pathArr.indexOf(scssValue), 1);
             }
@@ -126,16 +179,13 @@ function removeDuplicateLinkCSS(scssFileList, pathArr) {
     return result;
 }
 
-function formatPath(pathToFormat) {
-    console.log(path.join(__dirname, `../../${pathToFormat}`).replace(/\\/g, "/"))
-    return path.join(__dirname, `../../${pathToFormat}`).replace(/\\/g, "/");
-}
+*/
 
 module.exports = {
     initializeJSONFileList,
     reinitializeJSONFileList,
     isUpdateAllSCSSWhenSave,
     getJsonFilePath,
-    updateJSONFile,
-    removeFileFromJSON
+    addNewFileToJSON,
+    removeFileFromJSON,
 };

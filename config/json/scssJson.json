@@ -9,17 +9,43 @@
         {
             "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/stylesheet.scss",
             "updateAll": false,
-            "linkSCSS": ["C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/tes3.scss"]
+            "linkSCSS": [
+                "ajsndoanhdo"
+            ]
         },
         {
-            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/tes3.scss",
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test.scss",
+            "updateAll": false,
+            "linkSCSS": [
+                "C:/github/express-scss-auto-compile/public/stylesheets/scss/test6/abcde.scss",
+                "ajsndoanhdo"
+            ]
+        },
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test1/test1.scss",
             "updateAll": false,
             "linkSCSS": []
         },
         {
-            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/test7.scss",
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test1/test2/test3/test3.scss",
             "updateAll": false,
-            "linkSCSS": ["C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/tes3.scss"]
+            "linkSCSS": [
+                "C:/github/express-scss-auto-compile/public/stylesheets/scss/test6/abcde.scss"
+            ]
+        },
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test5/test5.scss",
+            "updateAll": false,
+            "linkSCSS": [
+                "C:/github/express-scss-auto-compile/public/stylesheets/scss/test6/abcde.scss"
+            ]
+        },
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/test6/abcde.scss",
+            "updateAll": false,
+            "linkSCSS": [
+                "ajsndoanhdo"
+            ]
         }
     ]
 }

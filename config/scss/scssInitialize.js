@@ -8,6 +8,12 @@ let cssDirectoryPath = path.join(__dirname, "../../public/stylesheets/css");
 let scssDirectoryPath = path.join(__dirname, "../../public/stylesheets/scss");
 let scssJsonFilePath = jsonSetUp.getJsonFilePath();
 
+let directoryNameFilterCondition = [["/scss/", "/css/"]];
+let fileNameFilterCondition = [
+  ["/scss/", "/css/"],
+  [".scss", ".css"],
+];
+
 function scssForProduction() {
   scssInitialize()
     .then(function (result) {
@@ -20,6 +26,7 @@ function scssForProduction() {
 
 async function scssInitialize() {
   try {
+
     if (fileHelper.checkExistence(cssDirectoryPath)) {
       await fileHelper.removeDirectoryAsync(cssDirectoryPath);
     }
@@ -32,12 +39,6 @@ async function scssInitialize() {
       );
       scssDirectoryArr.splice(0, 0, cssDirectoryPath);
 
-      let directoryNameFilterCondition = [["/scss/", "/css/"]];
-      let fileNameFilterCondition = [
-        ["/scss/", "/css/"],
-        [".scss", ".css"],
-      ];
-
       let contentArr = [];
       // TODO: development or production
       contentArr = scssFileArr.map(function (path) {
@@ -49,20 +50,21 @@ async function scssInitialize() {
 
       let scssPathArr = fileHelper.getChildFilePath(`${scssDirectoryPath}/**/*.scss`);
 
-      if (fileHelper.checkExistence(scssJsonFilePath)) {
-        jsonSetUp.reinitializeJSONFileList(scssPathArr);
-      }else{
-        let scssJsonObj = {
-          updateAllSCSSWhenSave: jsonSetUp.isUpdateAllSCSSWhenSave(),
-        }
-  
-        scssJsonObj.scssFileList = jsonSetUp.initializeJSONFileList(scssPathArr);
-        await fileHelper.createFileAsync([scssJsonFilePath], [JSON.stringify(scssJsonObj)]);
+      let scssJsonObj = {
+        updateAllSCSSWhenSave: jsonSetUp.isUpdateAllSCSSWhenSave(),
       }
 
-      return Promise.resolve("scss initialize finish.");
+      scssJsonObj.scssFileList = jsonSetUp.initializeJSONFileList(scssPathArr);
+
+      if (fileHelper.checkExistence(scssJsonFilePath)) {
+        scssJsonObj.scssFileList = jsonSetUp.reinitializeJSONFileList(scssJsonObj.scssFileList);
+      }
+
+      await fileHelper.createFileAsync([scssJsonFilePath], [JSON.stringify(scssJsonObj)]);
+
+      return Promise.resolve("scssInitialize: SCSS initialize finish.");
     } else {
-      return Promise.reject("No styles found!");
+      return Promise.reject("scssInitialize: No styles found!");
     }
 
   } catch (e) {
@@ -71,28 +73,37 @@ async function scssInitialize() {
 }
 
 function setSCSSFileListener() {
-
-  let watcher = chokidar.watch("public/stylesheets/scss/**");
+  let watcher = chokidar.watch("public/stylesheets/scss/**", { ignoreInitial: true });
   watcher
     .on('add', function (path) {
-      console.log(`File ${path} is added.`);
-      jsonSetUp.updateJSONFile(path, true);
+      console.log(`setSCSSFileListener: File ${path} is added.`);
+      jsonSetUp.addNewFileToJSON(fileHelper.formatPath(path), true);
+      // TODO: compile
     })
     .on('unlink', function (path) {
-      console.log(`File ${path} is removed.`);
-      jsonSetUp.removeFileFromJSON(path);
-      // TODO: remove from /css
+      console.log(`setSCSSFileListener: File ${path} is removed.`);
+      
+      let formatPath = fileHelper.formatPath(path);
+      jsonSetUp.removeFileFromJSON(formatPath);
+      //TODO: check file exist
+      fileHelper.removeFileAsync(fileHelper.replacePath(formatPath, fileNameFilterCondition));
+
     })
     .on('addDir', function (path) {
+      console.log(`setSCSSFileListener: Directory ${path} is added.`);
     })
     .on('unlinkDir', function (path) {
+      console.log(`setSCSSFileListener: Directory ${path} is removed.`);
     })
     .on('change', function (path) {
+      console.log(`setSCSSFileListener: File ${path} has changed.`);
     })
     .on('error', function (e) {
+      console.log(e);
     })
     .on('ready', function () {
-      console.log("Listener setting is successful.")
+      console.log("setSCSSFileListener: Listener setting is successful.")
+      console.log("-------------------------------------------------------");
     });
 
 }
