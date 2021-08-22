@@ -17,7 +17,7 @@ let fileNameReplaceCondition = [
 function scssForProduction() {
   scssInitialize()
     .then(function (result) {
-      console.log(`Production: ${result}`)
+      console.log(`Production ${result}`)
     })
     .catch(function (e) {
       console.log(`Production Fail: ${e}`);
@@ -37,7 +37,7 @@ async function scssInitialize() {
       scssDirectoryArr.splice(0, 0, cssDirectoryPath);
 
       let contentArr = [];
-      // TODO: development or production
+
       contentArr = scssFileArr.map(function (path) {
         return translateToCSS(path, false);
       })
@@ -94,10 +94,15 @@ function setSCSSFileListener() {
       console.log("-------------------------------------------------------");
     })
     .on('addDir', function (path) {
+      let formatPath = fileHelper.formatPath(path);
+      fileHelper.createDirectoryAsync([formatPath], directoryNameReplaceCondition);
       console.log(`setSCSSFileListener: Directory ${path} is added.`);
       console.log("-------------------------------------------------------");
     })
     .on('unlinkDir', function (path) {
+      let formatPath = fileHelper.replacePath(path.replace(/\\/g, "/"), directoryNameReplaceCondition);
+      console.log("path: " + formatPath);
+      fileHelper.removeDirectoryAsync(formatPath);
       console.log(`setSCSSFileListener: Directory ${path} is removed.`);
       console.log("-------------------------------------------------------");
     })
@@ -107,15 +112,15 @@ function setSCSSFileListener() {
       let updatePath = [];
       let cssContent = [];
 
+      updatePath.push(formatPath);
+      cssContent.push(translateToCSS(formatPath));
+
       let linkSCSS = jsonSetUp.getLinkSCSS(formatPath);
       if (linkSCSS.length !== 0) {
         linkSCSS.forEach(function (link) {
           updatePath.push(link);
           cssContent.push(translateToCSS(link));
         });
-      } else {
-        updatePath.push(formatPath);
-        cssContent.push(formatPath);
       }
 
       fileHelper.createFileAsync(updatePath, cssContent, fileNameReplaceCondition)
@@ -133,6 +138,7 @@ function setSCSSFileListener() {
       console.log("-------------------------------------------------------");
     })
     .on('error', function (e) {
+      console.log("error~!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       console.log(e);
     })
     .on('ready', function () {
@@ -158,5 +164,6 @@ function translateToCSS(filePath, isProduction = false) {
 
 module.exports = {
   scssInitialize,
-  setSCSSFileListener
+  setSCSSFileListener,
+  scssForProduction
 }
