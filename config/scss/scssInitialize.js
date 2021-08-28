@@ -14,6 +14,7 @@ let fileNameReplaceCondition = [
   [".scss", ".css"],
 ];
 
+// run it use the command from package.json
 function scssForProduction() {
   scssInitialize()
     .then(function (result) {
@@ -24,13 +25,17 @@ function scssForProduction() {
     });
 }
 
-async function scssInitialize() {
+async function scssInitialize(isProduction = true) {
   try {
+    // remove the css directory
     await fileHelper.removeDirectoryAsync(cssDirectoryPath);
 
     let scssFileArr = fileHelper.getChildFilePath(`${scssDirectoryPath}/**/!(_)*.scss`);
 
     if (scssFileArr.length >= 1) {
+      // there are at least one scss file
+
+      // compile scss files
       let scssDirectoryArr = fileHelper.getChildDirectoryPath(
         `${scssDirectoryPath}/**/!(*.scss)`
       );
@@ -39,14 +44,15 @@ async function scssInitialize() {
       let contentArr = [];
 
       contentArr = scssFileArr.map(function (path) {
-        return translateToCSS(path, false);
-      })
+        return translateToCSS(path, isProduction);
+      });
 
       await fileHelper.createDirectoryAsync(scssDirectoryArr, directoryNameReplaceCondition);
       await fileHelper.createFileAsync(scssFileArr, contentArr, fileNameReplaceCondition);
 
       let scssPathArr = fileHelper.getChildFilePath(`${scssDirectoryPath}/**/*.scss`);
 
+      // initialize scssJson.json
       let scssJsonObj = {
         updateAllSCSSWhenSave: jsonSetUp.isUpdateAllSCSSWhenSave(),
       }
@@ -69,15 +75,17 @@ async function scssInitialize() {
   }
 }
 
-function setSCSSFileListener() {
+// listen to the file change of scss folder
+function setSCSSFileListener(isProduction = true) {
   let watcher = chokidar.watch("public/stylesheets/scss/**", { ignoreInitial: true });
   watcher
     .on('add', function (path) {
+      // new file is added
       let formatPath = fileHelper.formatPath(path);
       jsonSetUp.addNewFileToJSON(formatPath, true);
 
       if (!fileHelper.checkFileEmpty(formatPath)) {
-        fileHelper.createFileAsync([formatPath], [translateToCSS(formatPath)], fileNameReplaceCondition)
+        fileHelper.createFileAsync([formatPath], [translateToCSS(formatPath, isProduction)], fileNameReplaceCondition)
           .catch(function (e) {
             console.log(e);
           });
@@ -87,6 +95,7 @@ function setSCSSFileListener() {
       console.log("-------------------------------------------------------");
     })
     .on('unlink', function (path) {
+      // new file is removed
       let formatPath = fileHelper.formatPath(path);
       jsonSetUp.removeFileFromJSON(formatPath);
       fileHelper.removeFileAsync(fileHelper.replacePath(formatPath, fileNameReplaceCondition));
@@ -94,12 +103,15 @@ function setSCSSFileListener() {
       console.log("-------------------------------------------------------");
     })
     .on('addDir', function (path) {
+      // new directory is added
       let formatPath = fileHelper.formatPath(path);
       fileHelper.createDirectoryAsync([formatPath], directoryNameReplaceCondition);
       console.log(`setSCSSFileListener: Directory ${path} is added.`);
       console.log("-------------------------------------------------------");
     })
     .on('unlinkDir', function (path) {
+      // new directory is removed
+      // NOtice: for Windows user, it will trigger EPERM error if you want to delete an empty directory
       let formatPath = fileHelper.replacePath(path.replace(/\\/g, "/"), directoryNameReplaceCondition);
       console.log("path: " + formatPath);
       fileHelper.removeDirectoryAsync(formatPath);
@@ -107,19 +119,20 @@ function setSCSSFileListener() {
       console.log("-------------------------------------------------------");
     })
     .on('change', function (path) {
+      //file is changed
       let formatPath = fileHelper.formatPath(path);
 
       let updatePath = [];
       let cssContent = [];
 
       updatePath.push(formatPath);
-      cssContent.push(translateToCSS(formatPath));
+      cssContent.push(translateToCSS(formatPath, isProduction));
 
       let linkSCSS = jsonSetUp.getLinkSCSS(formatPath);
       if (linkSCSS.length !== 0) {
         linkSCSS.forEach(function (link) {
           updatePath.push(link);
-          cssContent.push(translateToCSS(link));
+          cssContent.push(translateToCSS(link, isProduction));
         });
       }
 
@@ -148,7 +161,8 @@ function setSCSSFileListener() {
 
 }
 
-function translateToCSS(filePath, isProduction = false) {
+function translateToCSS(filePath, isProduction = true) {
+  // compile scss to css
   let option = {
     file: filePath,
     sourceMapEmbed: isProduction ? true : false,
@@ -163,7 +177,8 @@ function translateToCSS(filePath, isProduction = false) {
 }
 
 module.exports = {
+  scssForProduction,
   scssInitialize,
   setSCSSFileListener,
-  scssForProduction
+
 }

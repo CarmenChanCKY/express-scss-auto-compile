@@ -7,7 +7,6 @@ var dotenv = require("dotenv");
 dotenv.config();
 
 var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
 var scssInitialize = require("./config/scss/scssInitialize.js");
 
 var app = express();
@@ -23,12 +22,12 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
 
+// only works for development mode
 if (process.env.ENV_MODE === "development") {
-  scssInitialize.scssInitialize().then(function (result) {
+  scssInitialize.scssInitialize(false).then(function (result) {
     console.log(result);
-    scssInitialize.setSCSSFileListener();
+    scssInitialize.setSCSSFileListener(false);
   }).catch(function (e) {
     console.log(e);
   });

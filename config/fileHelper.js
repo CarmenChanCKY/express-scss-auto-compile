@@ -3,11 +3,6 @@ const fsAsync = require("fs/promises");
 const glob = require("glob");
 const path = require("path");
 
-/**
- * Check whether the directory or file exist
- * @param {String} path path of the directory or file
- * @returns {Boolean} true when directory or file exist, false when it does not exist
- */
 function checkExistence(path) {
   console.log(`checkExistence: ${path}`);
   return fs.existsSync(path);
@@ -82,15 +77,9 @@ function removeFileAsync(filePath) {
   }
 }
 
-
-
 function formatPath(pathToFormat) {
   return path.join(__dirname, `../${pathToFormat}`).replace(/\\/g, "/");
 }
-
-
-
-
 
 function replacePath(path, replaceConditionArr) {
   for (let j = 0; j < replaceConditionArr.length; j++) {
@@ -103,12 +92,9 @@ function replacePath(path, replaceConditionArr) {
   return path;
 }
 
-function changePermission(path){
-  fs.chmodSync(path, 0o700);
-}
-
 module.exports = {
   checkExistence,
+  checkFileEmpty,
   getChildDirectoryPath,
   getChildFilePath,
   createDirectoryAsync,
@@ -116,7 +102,5 @@ module.exports = {
   removeDirectoryAsync,
   removeFileAsync,
   formatPath,
-  replacePath,
-  checkFileEmpty,
-  changePermission
+  replacePath
 };
