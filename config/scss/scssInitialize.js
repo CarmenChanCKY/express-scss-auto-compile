@@ -111,7 +111,7 @@ function setSCSSFileListener(isProduction = true) {
     })
     .on('unlinkDir', function (path) {
       // new directory is removed
-      // NOtice: for Windows user, it will trigger EPERM error if you want to delete an empty directory
+      // NOTICE: for Windows user, it will trigger EPERM error if you want to delete an empty directory
       let formatPath = fileHelper.replacePath(path.replace(/\\/g, "/"), directoryNameReplaceCondition);
       console.log("path: " + formatPath);
       fileHelper.removeDirectoryAsync(formatPath);

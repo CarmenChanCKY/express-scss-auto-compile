@@ -1,0 +1,15 @@
+{
+    "updateAllSCSSWhenSave": false,
+    "scssFileList": [
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/_variable.scss",
+            "updateAll": true,
+            "linkSCSS": []
+        },
+        {
+            "filePath": "C:/github/express-scss-auto-compile/public/stylesheets/scss/stylesheet.scss",
+            "updateAll": false,
+            "linkSCSS": ["C:/github/express-scss-auto-compile/public/stylesheets/scss/_variable.scss"]
+        }
+    ]
+}
